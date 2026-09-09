@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AuraCredit — Учет рассрочек в Берекет Гранд</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+            --glass-bg: rgba(255, 255, 255, 0.07);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --glass-hover: rgba(255, 255, 255, 0.12);
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --accent: #ec4899;
+            --success: #10b981;
+            --danger: #f43f5e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --card-radius: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 15px;
+            overflow-x: hidden;
+        }
+
+        .bg-blobs {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            overflow: hidden;
+            z-index: -1;
+            filter: blur(80px);
+            opacity: 0.5;
+        }
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            animation: float 20s infinite alternate ease-in-out;
+        }
+        .blob-1 { width: 400px; height: 400px; background: #6366f1; top: -10%; left: -10%; }
+        .blob-2 { width: 500px; height: 500px; background: #a855f7; bottom: -20%; right: -10%; animation-delay: -5s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(50px, 80px) scale(1.1); }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            padding: 15px 20px;
+            border-radius: var(--card-radius);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+        }
+
+        .logo-text h1 {
+            font-size: 18px;
+            font-weight: 800;
+            background: linear-gradient(to right, #fff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-text p {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 6px 12px;
+            border-radius: 30px;
+            border: 1px solid var(--glass-border);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-direction: column;
+        }
+
+        .search-box {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 14px 20px 14px 45px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            color: white;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 16px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+        }
+
+        .clients-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .client-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 16px;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .client-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .client-main-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .client-avatar {
+            width: 45px; height: 45px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 2px solid var(--glass-border);
+            background: #2d2640;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .client-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .client-phone-model {
+            font-size: 12px;
+            color: var(--text-muted);
+            word-break: break-all;
+        }
+
+        .client-debt-badge {
+            text-align: right;
+            min-width: 90px;
+        }
+
+        .debt-title {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .debt-sum {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .client-body {
+            display: none; /* Управляем через JS чтобы карточка не дергалась */
+            border-top: 1px solid rgba(255,255,255,0.08);
+            margin-top: 14px;
+            padding-top: 14px;
+        }
+
+        .client-card.active .client-body {
+            display: block;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+            font-size: 12px;
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 12px;
+        }
+
+        .details-grid div span {
+            color: var(--text-muted);
+            display: block;
+            font-size: 10px;
+        }
+
+        .traffic-section {
+            margin-bottom: 14px;
+        }
+
+        .traffic-title {
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+        }
+
+        .traffic-months {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .month-pill {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            flex: 1 1 40%;
+            min-width: 100px;
+            user-select: none;
+        }
+
+        .month-pill.paid {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--success);
+            color: #6ee7b7;
+        }
+        .month-pill.paid span.m-text {
+            text-decoration: line-through;
+            opacity: 0.8;
+        }
+
+        .action-panels {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .action-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--glass-border);
+            padding: 10px;
+            border-radius: 12px;
+            display: flex;
+            gap: 8px;
+            flex-direction: column;
+        }
+
+        .action-box-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-box input {
+            width: 100%;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 12px;
+            color: white;
+            font-size: 15px;
+            outline: none;
+        }
+
+        .action-box input:focus {
+            border-color: var(--primary);
+        }
+
+        .local-error {
+            color: var(--danger);
+            font-size: 11px;
+            display: none;
+        }
+
+        .btn-sub, .btn-add-debt {
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-sub { background: var(--success); }
+        .btn-add-debt { background: var(--danger); }
+
+        .card-footer-btns {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .btn-edit, .btn-del {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 15px;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: #181824;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            width: 100%;
+            max-width: 480px;
+            padding: 20px;
+            border-radius: var(--card-radius);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.open .modal-card {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .form-group input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px;
+            color: white;
+            font-size: 15px;
+            outline: none;
+        }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+            font-size: 14px;
+            background: var(--glass-bg);
+            border-radius: var(--card-radius);
+            border: 1px dashed var(--glass-border);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">📱</div>
+                <div class="logo-text">
+                    <h1>Bereket Grand</h1>
+                    <p>Учет рассрочек</p>
+                </div>
+            </div>
+            <div class="user-badge" id="userBadgeDisplay">
+                <span>👤</span> <span id="currentUserName">Гость</span>
+            </div>
+        </header>
+
+        <div class="controls">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Поиск по имени (например: бек)..." oninput="handleSearch()">
+            </div>
+            <button class="btn" onclick="openAddClientModal()">
+                <span>＋</span> Добавить клиента
+            </button>
+        </div>
+
+        <div class="clients-list" id="clientsList"></div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО РЕГИСТРАЦИИ -->
+    <div class="modal-overlay" id="regModal">
+        <div class="modal-card">
+            <div class="modal-title">
+                <span>⚡ Вход в систему</span>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">
+                Введите свое Имя или Номер телефона для доступа к базе данных Берекет Гранд.
+            </p>
+            <div class="form-group">
+                <label>Номер телефона или Имя</label>
+                <input type="text" id="regInput" placeholder="Например: 0700123456 или Админ">
+                <div class="error-msg" id="regError">❌ Ошибка: Такого номера не существует!</div>
+            </div>
+            <button class="btn" style="margin-top: 10px;" onclick="submitRegistration()">Войти / Зарегистрироваться</button>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО ДОБАВЛЕНИЯ КЛИЕНТА -->
+    <div class="modal-overlay" id="clientModal">
+        <div class="modal-card">
+            <div class="modal-title">
+                <span id="clientModalTitle">Новый клиент рассрочки</span>
+                <button class="close-modal" onclick="closeClientModal()">✕</button>
+            </div>
+            <input type="hidden" id="editClientId">
+            <div class="form-group">
+                <label>ФИО клиента</label>
+                <input type="text" id="fioInput" placeholder="Асан уулу Бакыт">
+            </div>
+            <div class="form-group">
+                <label>Номер клиента</label>
+                <input type="text" id="phoneInput" placeholder="+996 700 000 000">
+            </div>
+            <div class="form-group">
+                <label>Название телефона</label>
+                <input type="text" id="phoneModelInput" placeholder="iPhone 17 Pro">
+            </div>
+            <div class="form-group">
+                <label>Дата покупки (например: 26.09.10)</label>
+                <input type="text" id="dateInput" placeholder="26.09.10">
+            </div>
+            <div class="form-group">
+                <label>Полная цена телефона (сом)</label>
+                <input type="number" id="priceInput" placeholder="70000">
+            </div>
+            <div class="form-group">
+                <label>Первоначальный взнос (сом)</label>
+                <input type="number" id="vznosInput" placeholder="10000">
+            </div>
+            <div class="form-group">
+                <label>Количество месяцев рассрочки</label>
+                <input type="number" id="monthsInput" placeholder="4">
+            </div>
+            <div class="form-group">
+                <label>Фото клиента или паспорта</label>
+                <input type="file" id="photoInput" accept="image/*">
+            </div>
+            <button class="btn" style="margin-top: 15px;" onclick="saveClientData()">Сохранить клиента</button>
+        </div>
+    </div>
+
+    <script>
+        const allowedUsers = [
+            "0700123456", "0555999888", "admin", "берекет", "гранд", 
+            "0500112233", "700123456", "555999888", "санжар", "бека"
+        ];
+
+        let currentUser = localStorage.getItem("bereket_user");
+        let clients = JSON.parse(localStorage.getItem("bereket_clients")) || [];
+        
+        // Хранилище открытых карточек, чтобы они не схлопывались при перерисовке
+        let openCards = JSON.parse(localStorage.getItem("bereket_open_cards")) || {};
+
+        window.onload = function() {
+            if (currentUser) {
+                document.getElementById("currentUserName").innerText = currentUser;
+            } else {
+                lockUnregistered();
+            }
+            renderClients(clients);
+        };
+
+        function lockUnregistered() {
+            document.addEventListener("click", function(e) {
+                if (!currentUser) {
+                    if (!e.target.closest("#regModal") && !e.target.closest("header")) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        openRegModal();
+                    }
+                }
+            }, true);
+        }
+
+        function openRegModal() {
+            document.getElementById("regModal").classList.add("open");
+        }
+
+        function submitRegistration() {
+            let val = document.getElementById("regInput").value.trim().toLowerCase();
+            let errorDiv = document.getElementById("regError");
+            let isValid = allowedUsers.includes(val) || val.length >= 5; 
+
+            if (isValid) {
+                currentUser = document.getElementById("regInput").value.trim();
+                localStorage.setItem("bereket_user", currentUser);
+                document.getElementById("currentUserName").innerText = currentUser;
+                document.getElementById("regModal").classList.remove("open");
+                errorDiv.style.display = "none";
+                window.location.reload();
+            } else {
+                errorDiv.style.display = "block";
+            }
+        }
+
+        function openAddClientModal() {
+            if (!currentUser) { openRegModal(); return; }
+            document.getElementById("clientModalTitle").innerText = "Новый клиент рассрочки";
+            document.getElementById("fioInput").value = "";
+            document.getElementById("phoneInput").value = "";
+            document.getElementById("phoneModelInput").value = "";
+            document.getElementById("dateInput").value = "";
+            document.getElementById("priceInput").value = "";
+            document.getElementById("vznosInput").value = "";
+            document.getElementById("monthsInput").value = "";
+            document.getElementById("photoInput").value = "";
+            document.getElementById("editClientId").value = "";
+            document.getElementById("clientModal").classList.add("open");
+        }
+
+        function closeClientModal() {
+            document.getElementById("clientModal").classList.remove("open");
+        }
+
+        function saveClientData() {
+            let fio = document.getElementById("fioInput").value.trim();
+            let phone = document.getElementById("phoneInput").value.trim();
+            let model = document.getElementById("phoneModelInput").value.trim();
+            let date = document.getElementById("dateInput").value.trim();
+            let price = parseFloat(document.getElementById("priceInput").value) || 0;
+            let vznos = parseFloat(document.getElementById("vznosInput").value) || 0;
+            let months = parseInt(document.getElementById("monthsInput").value) || 1;
+            let fileInput = document.getElementById("photoInput");
+            let editId = document.getElementById("editClientId").value;
+
+            if (!fio || !price) {
+                alert("Заполните ФИО и цену телефона!");
+                return;
+            }
+
+            let currentDebt = price - vznos;
+
+            let processClient = (photoUrl) => {
+                if (editId) {
+                    let client = clients.find(c => c.id == editId);
+                    if (client) {
+                        client.fio = fio;
+                        client.phone = phone;
+                        client.model = model;
+                        client.date = date;
+                        client.price = price;
+                        client.vznos = vznos;
+                        let diff = price - client.price;
+                        client.debt = Math.max(0, client.debt + diff);
+                        if(photoUrl) client.photo = photoUrl;
+                    }
+                } else {
+                    let newClient = {
+                        id: Date.now(),
+                        fio: fio,
+                        phone: phone,
+                        model: model,
+                        date: date,
+                        price: price,
+                        vznos: vznos,
+                        debt: currentDebt,
+                        months: months,
+                        monthPayments: {},
+                        photo: photoUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"
+                    };
+                    clients.push(newClient);
+                }
+
+                saveAndRender();
+                closeClientModal();
+            };
+
+            if (fileInput.files && fileInput.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function(e) { processClient(e.target.result); };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                processClient(null);
+            }
+        }
+
+        function saveAndRender() {
+            localStorage.setItem("bereket_clients", JSON.stringify(clients));
+            renderClients(clients);
+        }
+
+        function renderClients(dataToRender) {
+            let listEl = document.getElementById("clientsList");
+            if (dataToRender.length === 0) {
+                listEl.innerHTML = `<div class="empty-state">Список клиентов пуст. Добавьте первого клиента!</div>`;
+                return;
+            }
+
+            listEl.innerHTML = "";
+            dataToRender.forEach(client => {
+                let baseMonthly = Math.ceil((client.price - client.vznos) / client.months);
+                if (!client.monthPayments) client.monthPayments = {};
+
+                let monthsHtml = "";
+                for (let i = 0; i < client.months; i++) {
+                    let paidForThisMonth = client.monthPayments[i] || 0;
+                    let isFullyPaid = paidForThisMonth >= baseMonthly;
+                    let remainingForMonth = Math.max(0, baseMonthly - paidForThisMonth);
+
+                    monthsHtml += `
+                        <div class="month-pill ${isFullyPaid ? 'paid' : ''}" onclick="toggleMonth(event, ${client.id}, ${i}, ${baseMonthly})">
+                            <span class="m-text">Месяц ${i+1}</span>
+                            <span><b>${isFullyPaid ? 'Оплачено' : remainingForMonth + 'с'}</b> ${isFullyPaid ? '✓' : ''}</span>
+                        </div>
+                    `;
+                }
+
+                let isOpen = openCards[client.id] ? "active" : "";
+
+                let cardDiv = document.createElement("div");
+                cardDiv.className = `client-card ${isOpen}`;
+                cardDiv.id = `card-${client.id}`;
+                cardDiv.innerHTML = `
+                    <div class="client-header" onclick="toggleCard(${client.id})">
+                        <div class="client-main-info">
+                            <img src="${client.photo}" class="client-avatar" alt="Foto">
+                            <div>
+                                <div class="client-name">${client.fio}</div>
+                                <div class="client-phone-model">📱 ${client.model || 'Телефон'} | 📞 ${client.phone || 'Нет'}</div>
+                            </div>
+                        </div>
+                        <div class="client-debt-badge">
+                            <div class="debt-title">Остаток</div>
+                            <div class="debt-sum" id="debt-val-${client.id}">${client.debt} сом</div>
+                        </div>
+                    </div>
+
+                    <div class="client-body">
+                        <div class="details-grid">
+                            <div><span>Дата покупки:</span> <b>${client.date || '—'}</b></div>
+                            <div><span>Цена:</span> <b>${client.price}с</b></div>
+                            <div><span>Взнос:</span> <b>${client.vznos}с</b></div>
+                            <div><span>Срок:</span> <b>${client.months} мес.</b></div>
+                        </div>
+
+                        <div class="traffic-section">
+                            <div class="traffic-title">
+                                📊 Трафик долгов (План: ~${baseMonthly}с/мес)
+                            </div>
+                            <div class="traffic-months">
+                                ${monthsHtml}
+                            </div>
+                        </div>
+
+                        <div class="action-panels">
+                            <div class="action-box">
+                                <div class="action-box-row">
+                                    <input type="number" id="sub-input-${client.id}" placeholder="Сумма вычета...">
+                                    <button class="btn-sub" onclick="subtractDebt(${client.id}, ${baseMonthly})">Вычесть</button>
+                                </div>
+                                <div class="local-error" id="err-sub-${client.id}">❌ Ошибка: Сумма больше остатка!</div>
+                            </div>
+                            <div class="action-box">
+                                <div class="action-box-row">
+                                    <input type="number" id="add-input-${client.id}" placeholder="Сумма к долгу...">
+                                    <button class="btn-add-debt" onclick="addDebt(${client.id}, ${baseMonthly})">Добавить</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-footer-btns">
+                            <button class="btn-edit" onclick="editClient(${client.id})">✏️ Редактировать</button>
+                            <button class="btn-del" onclick="deleteClient(${client.id})">🗑 Удалить</button>
+                        </div>
+                    </div>
+                `;
+                listEl.appendChild(cardDiv);
+            });
+        }
+
+        function toggleCard(id) {
+            let card = document.getElementById(`card-${id}`);
+            card.classList.toggle("active");
+            if (card.classList.contains("active")) {
+                openCards[id] = true;
+            } else {
+                delete openCards[id];
+            }
+            localStorage.setItem("bereket_open_cards", JSON.stringify(openCards));
+        }
+
+        function toggleMonth(event, clientId, monthIndex, baseMonthly) {
+            event.stopPropagation();
+            let client = clients.find(c => c.id == clientId);
+            if (!client) return;
+            if (!client.monthPayments) client.monthPayments = {};
+
+            let currentPaid = client.monthPayments[monthIndex] || 0;
+
+            if (currentPaid >= baseMonthly) {
+                client.monthPayments[monthIndex] = 0;
+                client.debt += baseMonthly;
+            } else {
+                let diff = baseMonthly - currentPaid;
+                client.monthPayments[monthIndex] = baseMonthly;
+                client.debt = Math.max(0, client.debt - diff);
+            }
+
+            saveAndRender();
+        }
+
+        function subtractDebt(clientId, baseMonthly) {
+            let input = document.getElementById(`sub-input-${clientId}`);
+            let errDiv = document.getElementById(`err-sub-${clientId}`);
+            let val = parseFloat(input.value);
+
+            let client = clients.find(c => c.id == clientId);
+            if (!client || !val || val <= 0) return;
+
+            if (val > client.debt) {
+                errDiv.style.display = "block";
+                setTimeout(() => { errDiv.style.display = "none"; }, 3500);
+                return;
+            } else {
+                errDiv.style.display = "none";
+            }
+
+            client.debt -= val;
+            if (!client.monthPayments) client.monthPayments = {};
+
+            let remainingMoney = val;
+            for (let i = 0; i < client.months; i++) {
+                if (remainingMoney <= 0) break;
+                let alreadyPaid = client.monthPayments[i] || 0;
+                let neededForThisMonth = baseMonthly - alreadyPaid;
+
+                if (neededForThisMonth > 0) {
+                    if (remainingMoney >= neededForThisMonth) {
+                        client.monthPayments[i] = baseMonthly;
+                        remainingMoney -= neededForThisMonth;
+                    } else {
+                        client.monthPayments[i] = alreadyPaid + remainingMoney;
+                        remainingMoney = 0;
+                    }
+                }
+            }
+
+            saveAndRender();
+        }
+
+        function addDebt(clientId, baseMonthly) {
+            let input = document.getElementById(`add-input-${clientId}`);
+            let val = parseFloat(input.value);
+
+            let client = clients.find(c => c.id == clientId);
+            if (!client || !val || val <= 0) return;
+
+            client.debt += val;
+            if (!client.monthPayments) client.monthPayments = {};
+
+            // Списываем «оплату» с месяцев с конца, так как долг увеличился
+            let remainingAdd = val;
+            for (let i = client.months - 1; i >= 0; i--) {
+                if (remainingAdd <= 0) break;
+                let paidHere = client.monthPayments[i] || 0;
+
+                if (paidHere > 0) {
+                    if (remainingAdd >= paidHere) {
+                        remainingAdd -= paidHere;
+                        client.monthPayments[i] = 0;
+                    } else {
+                        client.monthPayments[i] = paidHere - remainingAdd;
+                        remainingAdd = 0;
+                    }
+                }
+            }
+
+            saveAndRender();
+        }
+
+        function handleSearch() {
+            let query = document.getElementById("searchInput").value.trim().toLowerCase();
+            if (!query) {
+                renderClients(clients);
+                return;
+            }
+            let filtered = clients.filter(c => c.fio.toLowerCase().includes(query));
+            renderClients(filtered);
+        }
+
+        function editClient(clientId) {
+            let client = clients.find(c => c.id == clientId);
+            if (!client) return;
+
+            document.getElementById("editClientId").value = client.id;
+            document.getElementById("clientModalTitle").innerText = "Редактировать клиента";
+            document.getElementById("fioInput").value = client.fio;
+            document.getElementById("phoneInput").value = client.phone;
+            document.getElementById("phoneModelInput").value = client.model;
+            document.getElementById("dateInput").value = client.date;
+            document.getElementById("priceInput").value = client.price;
+            document.getElementById("vznosInput").value = client.vznos;
+            document.getElementById("monthsInput").value = client.months;
+            document.getElementById("clientModal").classList.add("open");
+        }
+
+        function deleteClient(clientId) {
+            if (confirm("Удалить этого клиента из базы Берекет Гранд?")) {
+                clients = clients.filter(c => c.id != clientId);
+                delete openCards[clientId];
+                localStorage.setItem("bereket_open_cards", JSON.stringify(openCards));
+                saveAndRender();
+            }
+        }
+    </script>
+</body>
+</html>
